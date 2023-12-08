@@ -21,7 +21,10 @@ import jakarta.servlet.http.HttpServletResponse;
 //http://localhost:8080/web-app-23544/api/orador
 @WebServlet("/api/orador")
 public class NuevoOradorController extends HttpServlet{
-
+	
+	//ahora por medio del repository guarda en la db
+	private OradorRepository repository = new MySqlOradorRepository();
+	
 	//crear > POST
 	protected void doPost(
 				HttpServletRequest request, //aca viene lo que manda el usuario 
@@ -50,9 +53,6 @@ public class NuevoOradorController extends HttpServlet{
 				LocalDate.now()
 		);
 		
-		//ahora por medio del repository guarda en la db
-		OradorRepository repository = new MySqlOradorRepository();
-		
 		repository.save(nuevo);
 		
 		//ahora respondo al front: json, Convirtiendo el nuevo Orador a json
@@ -66,8 +66,7 @@ public class NuevoOradorController extends HttpServlet{
 			HttpServletResponse response) throws ServletException, IOException {
 		
 		//ahora por medio del repository guarda en la db
-		OradorRepository repository = new MySqlOradorRepository();
-		List<Orador> listado = repository.findAll();
+		List<Orador> listado = this.repository.findAll();
 		
 		//convierto Objecto java a json string
 		ObjectMapper mapper = new ObjectMapper();
@@ -92,8 +91,37 @@ public class NuevoOradorController extends HttpServlet{
 		response.setStatus(HttpServletResponse.SC_OK);//200
 	}
 	
-	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		super.doPut(req, resp);
+	protected void doPut(
+			HttpServletRequest request, 
+			HttpServletResponse response) throws ServletException, IOException {
+		
+		String id  = request.getParameter("id");
+		
+		//ahora quiero los datos que viene en el body
+		String json = request.getReader()
+				.lines()
+				.collect(Collectors.joining(System.lineSeparator()));//spring
+		
+		//convierto de json String a Objecto java usando libreria de jackson2
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
+		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+		
+		OradorRequest oradorRequest = mapper.readValue(json, OradorRequest.class);
+
+		//busco el orador en la db
+		Orador orador = this.repository.getById(Long.parseLong(id));
+		
+		//ahora actualizo los datos
+		orador.setApellido(oradorRequest.getApellido());
+		orador.setNombre(oradorRequest.getNombre());
+		orador.setMail(oradorRequest.getEmail());
+		orador.setTema(oradorRequest.getTema());
+		
+		//ahora si, actualizo en la db!!
+		this.repository.update(orador);
+		
+		//le informa al front ok
+		response.setStatus(HttpServletResponse.SC_OK);
 	}
 }
