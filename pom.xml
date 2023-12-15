@@ -47,6 +47,11 @@
 			<artifactId>jackson-datatype-jsr310</artifactId>
 			<version>2.10.0</version>
 		</dependency>
+		<dependency>
+		    <groupId>com.github.bastiaanjansen</groupId>
+		    <artifactId>jwt-java</artifactId>
+		    <version>1.2.0</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<finalName>web-app-23544</finalName>

@@ -1,6 +1,11 @@
 package ar.com.codoacodo.controllers;
 
 import java.io.IOException;
+import java.util.Date;
+
+import com.bastiaanjansen.jwt.JWT;
+import com.bastiaanjansen.jwt.algorithms.Algorithm;
+import com.bastiaanjansen.jwt.exceptions.JWTCreationException;
 
 import ar.com.codoacodo.entity.User;
 import ar.com.codoacodo.repository.LoginRepository;
@@ -13,7 +18,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 
 @WebServlet("/auth/login")
-public class LoginController extends HttpServlet{
+public class LoginController extends AppBaseServlet {
 
 	protected void doGet(
 			HttpServletRequest request, 
@@ -31,7 +36,18 @@ public class LoginController extends HttpServlet{
 		//crar el token para enviar al front
 		response.setStatus(HttpServletResponse.SC_CREATED);//201
 		
-		response.addHeader("token", user.getNombre());		
-		response.getWriter().print(user.getNombre());		
+		try {
+			String jwt = new JWT.Builder(Algorithm.HMAC512("cac-23544"))
+			    .withIssuer(user.getNombre())
+			    .withAudience("aud1", "aud2")
+			    .withIssuedAt(new Date())
+			    .withID("id")
+			    .withClaim("username", user.getUsername()) // add custom claims
+			    .sign();
+			  
+			  response.getWriter().print(mapper.writeValueAsString(new JWTToken(jwt)));		
+			} catch (JWTCreationException e) {
+			  e.printStackTrace(); // Handle error
+			}
 	}
 }
